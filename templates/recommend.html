@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Recommendations - BookVault</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #10b981;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --success: #059669;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f5f7fa; color: var(--dark); line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        header { background: linear-gradient(120deg, var(--primary), var(--primary-dark)); color: white; padding: 1.5rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        nav { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; font-size: 1.8rem; font-weight: 700; }
+        .logo i { margin-right: 10px; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { color: white; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; transition: opacity .3s; }
+        .nav-links a:hover, .nav-links a.active { opacity: 0.9; }
+        .hero { text-align: center; padding: 3rem 0; background-color: white; margin: 2rem auto; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,.05); max-width: 900px; }
+        .hero h1 { font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; }
+        .hero p { color: var(--gray); font-size: 1.2rem; max-width: 700px; margin: 0 auto; }
+        .card { background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,.05); padding: 2rem; margin-bottom: 2rem; }
+        .form-title { color: var(--primary); margin-bottom: 1.5rem; font-size: 1.8rem; display: flex; align-items: center; gap: .5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--dark); }
+        input[type="text"] { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+        input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.2); }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background .3s, transform .2s; }
+        .btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        .helper-text { color: var(--gray); font-size: .9rem; margin-top: .5rem; }
+        .results-container { margin-top: 2rem; }
+        .match-card { background: linear-gradient(120deg,#e0e7ff,#d1fae5); border-left: 4px solid var(--success); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }
+        .match-title { color: var(--success); font-size: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+        .book-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,.05); padding: 1.5rem; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 1.5rem; transition: transform .3s; }
+        .book-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,.1); }
+        .book-icon { font-size: 2rem; color: var(--primary); background: #e0e7ff; padding: 1rem; border-radius: 8px; }
+        .book-details { flex: 1; }
+        .book-title { font-size: 1.2rem; font-weight: 600; color: var(--dark); margin-bottom: .5rem; }
+        .book-title a { text-decoration: none; color: inherit; }
+        .book-title a:hover { color: var(--primary); }
+        .book-author { color: var(--gray); margin-bottom: .5rem; font-style: italic; }
+        .book-genre { display: inline-block; background: #e0e7ff; color: var(--primary); padding: .3rem .8rem; border-radius: 20px; font-size: .8rem; margin-right: .5rem; margin-bottom: .3rem; }
+        .error-message { background: #fee2e2; color: var(--error); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--error); margin: 1.5rem 0; display: flex; align-items: center; gap: .5rem; }
+        .recommendations-header { color: var(--primary); margin: 2rem 0 1rem 0; font-size: 1.5rem; display: flex; align-items: center; gap: .5rem; }
+        footer { text-align: center; padding: 2rem 0; margin-top: 3rem; color: var(--gray); border-top: 1px solid #ddd; }
+        @media(max-width:768px){ 
+            .nav-links{gap:1rem;} 
+            .hero h1{font-size:2rem;} 
+            .hero p{font-size:1rem;} 
+            .book-card{flex-direction:column;gap:1rem;} 
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <nav>
+            <div class="logo">
+                <i class="fas fa-book-open"></i><span>BookVault</span>
+            </div>
+            <div class="nav-links">
+                <a href="/"><i class="fas fa-home"></i> Home</a>
+                <a href="/recommend" class="active"><i class="fas fa-search"></i> Recommendations</a>
+                <a href="#"><i class="fas fa-user"></i> Login</a>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    <div class="hero">
+        <h1>Discover Your Next Favorite Book</h1>
+        <p>Find personalized recommendations based on your preferences</p>
+    </div>
+
+    <div class="card">
+        <h2 class="form-title"><i class="fas fa-search"></i> Find Book Recommendations</h2>
+        <form method="post">
+            <div class="form-group">
+                <label for="query">Search by keyword</label>
+                <input type="text" id="query" name="query" required placeholder="Enter title, author, or genre">
+                <p class="helper-text">We'll find books similar to your search term</p>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-search"></i> Find Recommendations</button>
+        </form>
+
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i><span>{{ error }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+<!-- Results -->
+<div class="results-container">
+    {% if result is not none %}
+        <!-- Matched Book -->
+        <div class="match-card">
+            <h3 class="match-title">
+                <i class="fas fa-check-circle"></i> Matched: "{{ result.matched_token }}"
+            </h3>
+            <div class="book-card">
+                <div class="book-icon"><i class="fas fa-book"></i></div>
+                <div class="book-details">
+                    <h4 class="book-title">
+                        <a href="{{ url_for('book_details', book_id=result.matched_book.id) }}">
+                            {{ result.matched_book.title }}
+                        </a>
+                    </h4>
+                    <p class="book-author">by {{ result.matched_book.author }}</p>
+                    <div class="book-genres">
+                        {% for genre in result.matched_book.genre.split(',') %}
+                            <span class="book-genre">{{ genre.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% if result.matched_book.summary %}
+                        <p><strong>Summary:</strong> {{ result.matched_book.summary }}</p>
+                    {% endif %}
+                    <p class="price">₹{{ result.matched_book.price }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Books -->
+        {% if result.recommendations is not none and not result.recommendations.empty %}
+            <h3 class="recommendations-header">
+                <i class="fas fa-bookmark"></i> Recommended Books:
+            </h3>
+            <div class="recommendations-list">
+                {% for idx, row in result.recommendations.iterrows() %}
+                    <div class="book-card">
+                        <div class="book-icon"><i class="fas fa-book"></i></div>
+                        <div class="book-details">
+                            <h4 class="book-title">
+                                <a href="{{ url_for('book_details', book_id=row.id) }}">{{ row.title }}</a>
+                            </h4>
+                            <p class="book-author">by {{ row.author }}</p>
+                            <div class="book-genres">
+                                {% for genre in row.genre.split(',') %}
+                                    <span class="book-genre">{{ genre.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                            {% if row.summary %}
+                                <p><strong>Summary:</strong> {{ row.summary }}</p>
+                            {% endif %}
+                            <p class="price">₹{{ row.price }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No recommendations available.</p>
+        {% endif %}
+    {% endif %}
+</div>
+
+</main>
+
+<footer>
+    <div class="container"><p>© 2025 BookVault - Professional Book Management System</p></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,8 @@
+pip install -r requirements.txt
+requirements.txt
+
+Flask
+mysql-connector-python
+pandas
+scikit-learn
+rapidfuzz
