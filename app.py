@@ -37,6 +37,10 @@ def build_token_index(df):
 
 # --- Recommender Logic ---
 def get_recommendations(user_query, top_n=5, threshold=60):
+    normalized_query = (user_query or "").strip().casefold()
+    if not normalized_query:
+        return None, "Please enter a book title, author, or genre to get recommendations."
+
     df = load_books()
     if df.empty:
         return None, "No books found in the database."
@@ -52,9 +56,9 @@ def get_recommendations(user_query, top_n=5, threshold=60):
     token_list = list(token_index.keys())
 
     # Find closest token match
-    match = process.extractOne(user_query.lower(), token_list, scorer=fuzz.token_sort_ratio)
+    match = process.extractOne(normalized_query, token_list, scorer=fuzz.token_sort_ratio)
     if not match or match[1] < threshold:
-        return None, f"No match found for '{user_query}'."
+        return None, f"No matching book, author, or genre was found for '{user_query.strip()}'."
 
     matched_token = match[0]
     seed_idx = token_index[matched_token][0]
@@ -106,7 +110,11 @@ def recommend():
     error = None
 
     if request.method == 'POST':
-        query_text = request.form.get('query')
+        query_text = request.form.get('query', '').strip()
+
+        if not query_text:
+            error = "Please enter a book title, author, or genre to get recommendations."
+            return render_template('recommend.html', result=result, error=error)
 
         try:
             # Use TF-IDF + RapidFuzz recommender
