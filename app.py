@@ -23,6 +23,9 @@ def load_books():
     conn.close()
     return df
 
+def preprocess_text(text):
+    return str(text).lower().strip()
+
 # --- Build Token Map ---
 def build_token_index(df):
     token_map = {}
@@ -30,9 +33,11 @@ def build_token_index(df):
         title_tokens = row['title'].lower().split()
         author_tokens = row['author'].lower().split()
         genre_tokens = [g.strip().lower() for g in row['genre'].split(',')]
-        tokens = set(title_tokens + author_tokens + genre_tokens)
+        summary_tokens = row['summary'].lower().split()
+        tokens = set(title_tokens + author_tokens + genre_tokens + summary_tokens)
         for token in tokens:
-            token_map.setdefault(token, []).append(idx)
+            if token:
+                token_map.setdefault(token, []).append(idx)
     return token_map
 
 # --- Recommender Logic ---
@@ -41,9 +46,27 @@ def get_recommendations(user_query, top_n=5, threshold=60):
     if df.empty:
         return None, "No books found in the database."
 
-    # Create combined content for TF-IDF
-    df['content'] = (df['title'] + ' ' + df['author'] + ' ' + df['genre']).str.lower()
-    tfidf = TfidfVectorizer()
+    # Improve text preprocessing
+    df['title'] = df['title'].fillna('').apply(preprocess_text)
+    df['author'] = df['author'].fillna('').apply(preprocess_text)
+    df['genre'] = df['genre'].fillna('').apply(preprocess_text)
+    df['summary'] = df['summary'].fillna('').apply(preprocess_text)
+
+# Combine multiple metadata fields
+    df['content'] = (
+       (df['title'] + ' ') * 3 +
+       (df['author'] + ' ') * 2 +
+       (df['genre'] + ' ') * 2 +
+       df['summary']
+)
+
+# Improved TF-IDF
+    tfidf = TfidfVectorizer(
+        stop_words='english',
+        ngram_range=(1, 2),
+        sublinear_tf=True
+    )
+
     tfidf_matrix = tfidf.fit_transform(df['content'])
     cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
