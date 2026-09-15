@@ -19,9 +19,16 @@ db_config = {
 def load_books():
     conn = mysql.connector.connect(**db_config)
     query = "SELECT * FROM books"
-    df = pd.read_sql(query, conn)   # works with mysql.connector
+    df = pd.read_sql(query, conn)
     conn.close()
-    return df
+
+    # Handle missing values in fields used by the recommender
+    df['title'] = df['title'].fillna('')
+    df['author'] = df['author'].fillna('')
+    df['genre'] = df['genre'].fillna('')
+
+    return df   # works with mysql.connector
+
 
 # --- Build Token Map ---
 def build_token_index(df):
@@ -32,7 +39,8 @@ def build_token_index(df):
         genre_tokens = [g.strip().lower() for g in row['genre'].split(',')]
         tokens = set(title_tokens + author_tokens + genre_tokens)
         for token in tokens:
-            token_map.setdefault(token, []).append(idx)
+            if token:
+                token_map.setdefault(token, []).append(idx)
     return token_map
 
 # --- Recommender Logic ---
