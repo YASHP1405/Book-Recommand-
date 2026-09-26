@@ -37,6 +37,14 @@ def build_token_index(df):
 
 # --- Recommender Logic ---
 def get_recommendations(user_query, top_n=5, threshold=60):
+    # --- Validate and normalize input ---
+    if not user_query or not user_query.strip():
+        return None, "Please enter a book title, author, or genre to search."
+
+    # Collapse extra internal/leading/trailing whitespace and normalize case,
+    # so "  Harry   Potter " and "harry potter" are treated the same.
+    normalized_query = " ".join(user_query.strip().split()).lower()
+
     df = load_books()
     if df.empty:
         return None, "No books found in the database."
@@ -52,9 +60,9 @@ def get_recommendations(user_query, top_n=5, threshold=60):
     token_list = list(token_index.keys())
 
     # Find closest token match
-    match = process.extractOne(user_query.lower(), token_list, scorer=fuzz.token_sort_ratio)
+    match = process.extractOne(normalized_query, token_list, scorer=fuzz.token_sort_ratio)
     if not match or match[1] < threshold:
-        return None, f"No match found for '{user_query}'."
+        return None, f"No matching book found for \"{user_query.strip()}\". Try a different title, author, or genre."
 
     matched_token = match[0]
     seed_idx = token_index[matched_token][0]
@@ -109,11 +117,19 @@ def recommend():
         query_text = request.form.get('query')
 
         try:
-            # Use TF-IDF + RapidFuzz recommender
+            # Use TF-IDF + RapidFuzz recommender.
+            # get_recommendations() itself validates/normalizes the input
+            # (empty query, extra whitespace, casing) and returns a
+            # friendly message in `error` for those cases — no need to
+            # duplicate that logic here.
             result, error = get_recommendations(query_text, top_n=5, threshold=60)
 
         except Exception as e:
-            error = str(e)
+            # Don't leak raw exception details (e.g. a DB connection
+            # error) to the user — log server-side, show a friendly
+            # generic message instead.
+            app.logger.error(f"Unexpected error while getting recommendations: {e}")
+            error = "Something went wrong while processing your request. Please try again."
 
     return render_template('recommend.html', result=result, error=error)
 
