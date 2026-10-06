@@ -19,9 +19,16 @@ db_config = {
 def load_books():
     conn = mysql.connector.connect(**db_config)
     query = "SELECT * FROM books"
-    df = pd.read_sql(query, conn)   # works with mysql.connector
+    df = pd.read_sql(query, conn)
     conn.close()
-    return df
+
+    # Handle missing values in fields used by the recommender
+    df['title'] = df['title'].fillna('')
+    df['author'] = df['author'].fillna('')
+    df['genre'] = df['genre'].fillna('')
+
+    return df   # works with mysql.connector
+
 
 def preprocess_text(text):
     return str(text).lower().strip()
